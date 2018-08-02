@@ -17,10 +17,10 @@ $EM_CONF[$_EXTKEY] = array(
 	'author' => 'b:dreizehn GmbH',
 	'author_email' => 'typo3@b13.de',
 	'state' => 'beta',
-	'version' => '1.0.0',
+	'version' => '1.1.0',
 	'constraints' => array(
 		'depends' => array(
-			'typo3' => '7.0.0-7.6.99',
+			'typo3' => '8.7.0-8.7.99',
 		),
 		'conflicts' => array(
 		),

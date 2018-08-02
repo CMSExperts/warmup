@@ -6,7 +6,7 @@ certain caches.
 This extension is especially useful for large installations that deploy and
 then flush caches.
 
-The current state is intended for TYPO3 v7 LTS, and handles
+The current state is intended for TYPO3 v8 LTS, and handles
 the Rootline Cache.
 
 
@@ -24,7 +24,7 @@ up all caches. This is mostly `cache_core` (by running the script
 itself) and `cache_rootline`.
 
 ```
-./typo3/cli_dispatch.phpsh cache:warmup
+./typo3/sysext/core/bin/typo3 cache:warmup
 ```
 
 Running the script multiple times does not matter, as it solely
