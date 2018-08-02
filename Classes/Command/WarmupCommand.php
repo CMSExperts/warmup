@@ -102,7 +102,7 @@ class WarmupCommand extends Command
                     $pageRepository
                 );
             } catch (\RuntimeException $e) {
-                $erroredPageIds[] = 'Page ID: ' . $pageRecord['pid'] . ' (Language: ' . $pageTranslationRecord['sys_language_uid'] . ')';
+                $erroredPageIds[] = 'Page ID: ' . $pageTranslationRecord['pid'] . ' (Language: ' . $pageTranslationRecord['sys_language_uid'] . ')';
             }
         }
 
