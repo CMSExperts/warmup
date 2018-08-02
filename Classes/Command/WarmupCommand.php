@@ -134,6 +134,11 @@ class WarmupCommand extends Command
         $pageRepository->sys_language_uid = 0;
         $pageRepository->versioningWorkspaceId = 0;
         $pageRepository->init(false);
+
+        // Due to some ugly code in TYPO3 Core, we must fake a TSFE object
+        $GLOBALS['TSFE'] = new \stdClass();
+        $GLOBALS['TSFE']->sys_page = $pageRepository;
+        $GLOBALS['TSFE']->gr_list = '0,-1';
         return $pageRepository;
     }
 }
