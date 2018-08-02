@@ -44,11 +44,12 @@ Alternatively, you can use composer via `composer req cmsexperts/warmup`.
 Note that this extension does not take workspaces or mount points
 into account currently! Contributions are welcome.
 
-Also, this is a nice example on how to register a custom request
-handler, but do not consider the structuring of the code as best
-practice.
-
 
 ## Credits
 
 * Benni Mack
+
+
+## License
+
+GPL2.0+, see LICENSE.txt for more details.
