@@ -43,15 +43,15 @@ class WarmupCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $io->title('Welcome to the Cache Warmup');
 
-        try {
-            $io->writeln('Warming up the rootline for all pages. If it is there this will go fast.');
-            $this->warmupRootline();
-            $io->writeln('All done');
-            return 0;
-        } catch (\RuntimeException $e) {
+        $io->writeln('Warming up the rootline for all pages. If it is there this will go fast.');
+        $errors = $this->warmupRootline($io);
+        if (!empty($errors)) {
             $io->error('Error while warming up the rootline cache.');
+            $io->listing($errors);
             return 1;
         }
+        $io->writeln('All done');
+        return 0;
     }
 
     /**
@@ -60,9 +60,13 @@ class WarmupCommand extends Command
      *
      * The Rootline Utility does the rest by storing this data to the cache_rootline cache
      * if it has not happened yet.
+     *
+     * @param SymfonyStyle $io
+     * @return array the page Ids with errors
      */
-    protected function warmupRootline()
+    protected function warmupRootline(SymfonyStyle $io): array
     {
+        $erroredPageIds = [];
         $pageRepository = $this->initializePageRepository();
 
         // fetch all pages which are not deleted and in live workspace
@@ -73,11 +77,15 @@ class WarmupCommand extends Command
             ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
         $statement = $queryBuilder->select('uid')->from('pages')->execute();
         while ($pageRecord = $statement->fetch()) {
-            $this->buildRootLineForPage(
-                (int)$pageRecord['uid'],
-                0,
-                $pageRepository
-            );
+            try {
+                $this->buildRootLineForPage(
+                    (int)$pageRecord['uid'],
+                    0,
+                    $pageRepository
+                );
+            } catch (\RuntimeException $e) {
+                $erroredPageIds[] = 'Page ID: ' . $pageRecord['uid'];
+            }
         }
 
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
@@ -87,12 +95,18 @@ class WarmupCommand extends Command
             ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
         $statement = $queryBuilder->select('pid', 'sys_language_uid')->from('pages_language_overlay')->execute();
         while ($pageTranslationRecord = $statement->fetch()) {
-            $this->buildRootLineForPage(
-                (int)$pageTranslationRecord['pid'],
-                (int)$pageTranslationRecord['sys_language_uid'],
-                $pageRepository
-            );
+            try {
+                $this->buildRootLineForPage(
+                    (int)$pageTranslationRecord['pid'],
+                    (int)$pageTranslationRecord['sys_language_uid'],
+                    $pageRepository
+                );
+            } catch (\RuntimeException $e) {
+                $erroredPageIds[] = 'Page ID: ' . $pageRecord['pid'] . ' (Language: ' . $pageTranslationRecord['sys_language_uid'] . ')';
+            }
         }
+
+        return $erroredPageIds;
     }
 
     /**
