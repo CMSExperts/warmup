@@ -1,6 +1,6 @@
 <?php
 return [
     'cache:warmup' => [
-        'class' => \CMSExperts\Warmup\Command\WarmupCommand::class
+        'class' => \B13\Warmup\Command\WarmupCommand::class
     ],
 ];

@@ -9,6 +9,7 @@ then flush caches.
 The current state is intended for TYPO3 v8 LTS, and handles
 the Rootline Cache.
 
+For TYPO3 v9 LTS, pages can be called as well.
 
 ## Rootline Cache
 One of the main issues here is a large installation with lots of
@@ -36,14 +37,13 @@ already in the cache, the command runs smoothly.
 Install the extension by extracting the contents of this folder into
 typo3conf/ext/warmup and install the extension via the Extension Manager.
 
-Alternatively, you can use composer via `composer req cmsexperts/warmup`.
+Alternatively, you can use composer via `composer req b13/warmup`.
 
 
 ## Notes
 
 Note that this extension does not take workspaces or mount points
 into account currently! Contributions are welcome.
-
 
 ## Credits
 
