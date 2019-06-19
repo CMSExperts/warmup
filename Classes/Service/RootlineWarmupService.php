@@ -23,9 +23,8 @@ use TYPO3\CMS\Core\Utility\RootlineUtility;
 
 class RootlineWarmupService
 {
-    public function warmUp(SymfonyStyle $io): array
+    public function warmUp(SymfonyStyle $io)
     {
-        $erroredPageIds = [];
         // fetch all pages which are not deleted and in live workspace
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('pages');
@@ -38,10 +37,9 @@ class RootlineWarmupService
             try {
                 $this->buildRootLineForPage($pageRecord);
             } catch (\RuntimeException $e) {
-                $erroredPageIds[] = 'Page ID: ' . $pageRecord['uid'];
+                $io->error('Rootline Cache for Page ID ' . $pageRecord['uid'] . ' could not be warmed up');
             }
         }
-        return $erroredPageIds;
     }
 
     protected function buildRootLineForPage(array $pageRecord)

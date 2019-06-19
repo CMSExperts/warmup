@@ -12,13 +12,13 @@ namespace B13\Warmup;
  */
 
 
+use B13\Warmup\Authentication\FrontendUserGroupInjector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Core\ApplicationContext;
 use TYPO3\CMS\Core\Core\Environment;
-use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Error\Http\PageNotFoundException;
 use TYPO3\CMS\Core\Http\ImmediateResponseException;
 use TYPO3\CMS\Core\Http\MiddlewareDispatcher;
@@ -30,9 +30,13 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Exception\RequiredArgumentMissingException;
 use TYPO3\CMS\Extbase\Service\EnvironmentService;
 use TYPO3\CMS\Extbase\SignalSlot\Dispatcher;
-use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
 use TYPO3\CMS\Frontend\Http\RequestHandler;
 
+/**
+ * Simulates a HTTP request for TYPO3 Frontend within the same request.
+ *
+ * @todo: clean this class up
+ */
 class FrontendRequestBuilder
 {
     private $originalUser;
@@ -71,7 +75,7 @@ class FrontendRequestBuilder
 
     private function restore()
     {
-        unset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['postUserLookUp']['frontendrequestbuilder'];
+        $this->disableFrontendGroupAuthService();
         $GLOBALS['BE_USER'] = $this->originalUser;
         GeneralUtility::setSingletonInstance(EnvironmentService::class, $this->originalEnvironmentService);
         unset($GLOBALS['TSFE']);
@@ -79,35 +83,20 @@ class FrontendRequestBuilder
     }
 
 
-    public function buildRequestForPage(UriInterface $uri, $frontendUserGroups = []): ?ResponseInterface
+    public function buildRequestForPage(UriInterface $uri, ?int $frontendUserId, $frontendUserGroups = []): ?ResponseInterface
     {
         $this->prepare();
         $request = new ServerRequest($uri, 'GET');
 
-        $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['postUserLookUp']['frontendrequestbuilder'] = function($parameters, $parentObject) use ($frontendUserGroups) {
-            if (!empty($frontendUserGroups) && $parentObject instanceof FrontendUserAuthentication) {
-                $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-                    ->getQueryBuilderForTable('fe_users');
-                $parentObject->user = $queryBuilder
-                    ->select('*')
-                    ->from('fe_users')
-                    ->where(
-                        $queryBuilder->expr()->eq('usergroup', $queryBuilder->createNamedParameter(implode(',', $frontendUserGroups)))
-                    )
-                    ->setMaxResults(1)
-                    ->execute()
-                    ->fetch();
-            }
-        };
+        if (!empty($frontendUserGroups)) {
+            $this->activateFrontendGroupAuthService($frontendUserGroups, $frontendUserId);
+        }
 
         $response = null;
         try {
             $response = $this->executeFrontendRequest($request);
-            #var_dump($response->getBody()->getContents());
         } catch (ImmediateResponseException $e) {
             $response = $e->getResponse();
-            #var_dump($response->getBody()->getContents());
-            var_dump($response->getReasonPhrase());
         } catch (RequiredArgumentMissingException $e) {
             // @todo: log
         } catch (PageNotFoundException $e) {
@@ -198,5 +187,20 @@ class FrontendRequestBuilder
             $this->backedUpEnvironment['currentScript'],
             $this->backedUpEnvironment['isOsWindows'] ? 'WINDOWS' : 'UNIX'
         );
+    }
+
+    private function activateFrontendGroupAuthService(array $userGroups, ?int $specificUserId)
+    {
+        $GLOBALS['T3_SERVICES']['auth'][FrontendUserGroupInjector::class]['available'] = true;
+        $GLOBALS['T3_SERVICES']['auth'][FrontendUserGroupInjector::class]['alwaysActiveGroups'] = $userGroups;
+        $GLOBALS['T3_SERVICES']['auth'][FrontendUserGroupInjector::class]['requestUser'] = $specificUserId ?? false;
+
+    }
+
+    private function disableFrontendGroupAuthService()
+    {
+        $GLOBALS['T3_SERVICES']['auth'][FrontendUserGroupInjector::class]['available'] = false;
+        $GLOBALS['T3_SERVICES']['auth'][FrontendUserGroupInjector::class]['alwaysActiveGroups'] = [];
+        $GLOBALS['T3_SERVICES']['auth'][FrontendUserGroupInjector::class]['requestUser'] = false;
     }
 }

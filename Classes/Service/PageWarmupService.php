@@ -24,20 +24,26 @@ use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
 
+/**
+ * @todo: clean this class up, allow multi-language via SiteLanguage
+ */
 class PageWarmupService
 {
     private $io;
 
     /**
-     * @todo: implement this via constructor
      * @var array
      */
     private $excludePages = [];
 
-    public function warmUp(SymfonyStyle $io): array
+    public function __construct($excludePages = [])
+    {
+        $this->excludePages = $excludePages;
+    }
+
+    public function warmUp(SymfonyStyle $io)
     {
         $this->io = $io;
-        $erroredPageIds = [];
         // fetch all pages which are not deleted and in live workspace
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('pages');
@@ -48,7 +54,7 @@ class PageWarmupService
             ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
         $statement = $queryBuilder->select('*')->from('pages')->where(
             $queryBuilder->expr()->lt('doktype', 199),
-            $queryBuilder->expr()->lte('sys_language_uid', 0)
+            $queryBuilder->expr()->eq('sys_language_uid', 0)
         )->execute();
 
         $io->writeln('Starting to request pages at ' . strftime('d.m.Y H:i:s'));
@@ -67,13 +73,11 @@ class PageWarmupService
                 $requestedPages++;
 
             } catch (SiteNotFoundException $e) {
-                $erroredPageIds[] = 'Page ID: ' . $pageRecord['uid'];
+                $io->error('Rootline Cache for Page ID ' . $pageRecord['uid'] . ' could not be warmed up');
             }
         }
 
         $io->writeln('Finished requesting ' . $requestedPages . ' pages at ' . strftime('d.m.Y H:i:s'));
-
-        return $erroredPageIds;
     }
 
     /**
@@ -91,7 +95,7 @@ class PageWarmupService
         $this->io->writeln('Calling ' . (string)$url . ' (Page ID: ' . $pageRecord['uid'] . ', UserGroups: ' . implode(',', $userGroups) . ')');
 
         $builder = new FrontendRequestBuilder();
-        $builder->buildRequestForPage($url, $userGroups);
+        $builder->buildRequestForPage($url, 13, $userGroups);
     }
 
     protected function resolveRequestedUserGroupsForPage(array $pageRecord)

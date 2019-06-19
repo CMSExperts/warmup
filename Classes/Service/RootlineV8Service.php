@@ -29,12 +29,9 @@ class RootlineV8Service
      *
      * The Rootline Utility does the rest by storing this data to the cache_rootline cache
      * if it has not happened yet.
-     *
-     * @return array the page Ids with errors
      */
-    public function warmupRootline(SymfonyStyle $io): array
+    public function warmupRootline(SymfonyStyle $io)
     {
-        $erroredPageIds = [];
         $pageRepository = $this->initializePageRepository();
 
         // fetch all pages which are not deleted and in live workspace
@@ -52,7 +49,7 @@ class RootlineV8Service
                     $pageRepository
                 );
             } catch (\RuntimeException $e) {
-                $erroredPageIds[] = 'Page ID: ' . $pageRecord['uid'];
+                $io->error('Rootline Cache for Page ID ' . $pageRecord['uid'] . ' could not be warmed up');
             }
         }
 
@@ -70,11 +67,9 @@ class RootlineV8Service
                     $pageRepository
                 );
             } catch (\RuntimeException $e) {
-                $erroredPageIds[] = 'Page ID: ' . $pageTranslationRecord['pid'] . ' (Language: ' . $pageTranslationRecord['sys_language_uid'] . ')';
+                $io->error('Rootline Cache for Page ID ' . $pageRecord['uid'] . '  (Language: ' . $pageTranslationRecord['sys_language_uid'] . ') could not be warmed up');
             }
         }
-
-        return $erroredPageIds;
     }
 
     /**
