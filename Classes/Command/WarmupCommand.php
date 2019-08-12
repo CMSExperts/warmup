@@ -20,6 +20,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
+use TYPO3\CMS\Core\Utility\VersionNumberUtility;
 use TYPO3\CMS\Frontend\Page\PageRepository;
 
 /**
@@ -87,25 +88,26 @@ class WarmupCommand extends Command
                 $erroredPageIds[] = 'Page ID: ' . $pageRecord['uid'];
             }
         }
-
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getQueryBuilderForTable('pages_language_overlay');
-        $queryBuilder->getRestrictions()
-            ->removeAll()
-            ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
-        $statement = $queryBuilder->select('pid', 'sys_language_uid')->from('pages_language_overlay')->execute();
-        while ($pageTranslationRecord = $statement->fetch()) {
-            try {
-                $this->buildRootLineForPage(
-                    (int)$pageTranslationRecord['pid'],
-                    (int)$pageTranslationRecord['sys_language_uid'],
-                    $pageRepository
-                );
-            } catch (\RuntimeException $e) {
-                $erroredPageIds[] = 'Page ID: ' . $pageTranslationRecord['pid'] . ' (Language: ' . $pageTranslationRecord['sys_language_uid'] . ')';
+        if(VersionNumberUtility::convertVersionNumberToInteger(VersionNumberUtility::getNumericTypo3Version()) < 9000000)
+        {
+            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+                ->getQueryBuilderForTable('pages_language_overlay');
+            $queryBuilder->getRestrictions()
+                ->removeAll()
+                ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
+            $statement = $queryBuilder->select('pid', 'sys_language_uid')->from('pages_language_overlay')->execute();
+            while ($pageTranslationRecord = $statement->fetch()) {
+                try {
+                    $this->buildRootLineForPage(
+                        (int)$pageTranslationRecord['pid'],
+                        (int)$pageTranslationRecord['sys_language_uid'],
+                        $pageRepository
+                    );
+                } catch (\RuntimeException $e) {
+                    $erroredPageIds[] = 'Page ID: ' . $pageTranslationRecord['pid'] . ' (Language: ' . $pageTranslationRecord['sys_language_uid'] . ')';
+                }
             }
         }
-
         return $erroredPageIds;
     }
 

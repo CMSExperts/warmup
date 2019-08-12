@@ -6,7 +6,7 @@ certain caches.
 This extension is especially useful for large installations that deploy and
 then flush caches.
 
-The current state is intended for TYPO3 v8 LTS, and handles
+The current state is provided as of TYPO3 v8 LTS, and handles
 the Rootline Cache.
 
 
