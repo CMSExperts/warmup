@@ -74,7 +74,7 @@ class WarmupCommand extends Command
                     yield 'rootline' => new RootlineWarmupService();
                     break;
                 case 'pages':
-                    yield 'pages' => new RootlineWarmupService();
+                    yield 'pages' => new PageWarmupService();
                     break;
 
             }
