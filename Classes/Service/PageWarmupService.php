@@ -57,7 +57,7 @@ class PageWarmupService
             $queryBuilder->expr()->eq('sys_language_uid', 0)
         )->execute();
 
-        $io->writeln('Starting to request pages at ' . strftime('d.m.Y H:i:s'));
+        $io->writeln('Starting to request pages at ' . date('d.m.Y H:i:s'));
         $requestedPages = 0;
 
         while ($pageRecord = $statement->fetch()) {
@@ -77,7 +77,7 @@ class PageWarmupService
             }
         }
 
-        $io->writeln('Finished requesting ' . $requestedPages . ' pages at ' . strftime('d.m.Y H:i:s'));
+        $io->writeln('Finished requesting ' . $requestedPages . ' pages at ' . date('d.m.Y H:i:s'));
     }
 
     /**
