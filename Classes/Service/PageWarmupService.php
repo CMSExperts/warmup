@@ -53,7 +53,7 @@ class PageWarmupService
             ->add(GeneralUtility::makeInstance(HiddenRestriction::class))
             ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
         $statement = $queryBuilder->select('*')->from('pages')->where(
-            $queryBuilder->expr()->lt('doktype', 199),
+            $queryBuilder->expr()->eq('doktype', 1), //call only standard pages
             $queryBuilder->expr()->eq('sys_language_uid', 0)
         )->execute();
 
