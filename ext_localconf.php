@@ -1,12 +1,9 @@
 <?php
 
-use B13\Warmup\Authentication\FrontendUserGroupInjector;
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
-
-ExtensionManagementUtility::addService(
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addService(
     'warmup',
     'auth',
-    FrontendUserGroupInjector::class,
+    \B13\Warmup\Authentication\FrontendUserGroupInjector::class,
     [
         'title' => 'Add Frontend Groups based on CLI Request Builder',
         'description' => 'Adds frontend usergroups by verifying data from the Frontend Request Builder.',
@@ -14,6 +11,6 @@ ExtensionManagementUtility::addService(
         'available' => false,
         'priority' => 90,
         'quality' => 90,
-        'className' => FrontendUserGroupInjector::class,
+        'className' => \B13\Warmup\Authentication\FrontendUserGroupInjector::class,
     ]
 );
